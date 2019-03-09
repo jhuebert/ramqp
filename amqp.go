@@ -27,6 +27,7 @@ func establishConnection(uri string) *amqp.Connection {
 	for {
 		connection, err := amqp.Dial(uri)
 		if err == nil {
+			log.Infof("Connection successful")
 			return connection
 		}
 
