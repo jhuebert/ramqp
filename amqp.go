@@ -47,15 +47,3 @@ func amqpConnector(uri string) {
 		}
 	}
 }
-
-func confirmPublish(confirmations <-chan amqp.Confirmation) {
-	log.Debugf("Waiting for publish confirmation")
-
-	confirmed := <-confirmations
-
-	if confirmed.Ack {
-		log.Debugf("Publish confirmed")
-	} else {
-		log.Error("Publish failed")
-	}
-}

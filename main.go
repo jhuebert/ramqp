@@ -111,13 +111,13 @@ func publishHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Add publish confirmation if requested
+	var confirmations chan amqp.Confirmation
 	if confirm {
 		err := channel.Confirm(false)
 		if err == nil {
-			confirms := channel.NotifyPublish(make(chan amqp.Confirmation, 1))
-			defer confirmPublish(confirms)
+			confirmations = channel.NotifyPublish(make(chan amqp.Confirmation, 1))
 		} else {
-			log.Error(err)
+			log.Warn(err)
 		}
 	}
 
@@ -144,6 +144,20 @@ func publishHandler(w http.ResponseWriter, r *http.Request) {
 		log.Error(err)
 		w.WriteHeader(500)
 		return
+	}
+
+	// Wait for confirmation that the message published successfully
+	if confirm {
+		log.Debugf("Waiting for publish confirmation")
+
+		confirmed := <-confirmations
+		if !confirmed.Ack {
+			log.Error("Publish failed")
+			w.WriteHeader(500)
+			return
+		}
+
+		log.Debugf("Publish confirmed")
 	}
 
 	// If we make it here the message was successfully published
