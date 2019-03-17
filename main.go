@@ -109,6 +109,7 @@ func publishHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(500)
 		return
 	}
+	defer closeChannel(channel)
 
 	// Add publish confirmation if requested
 	var confirmations chan amqp.Confirmation
@@ -162,4 +163,11 @@ func publishHandler(w http.ResponseWriter, r *http.Request) {
 
 	// If we make it here the message was successfully published
 	w.WriteHeader(202)
+}
+
+func closeChannel(channel *amqp.Channel) {
+	err := channel.Close()
+	if err != nil {
+		log.Warn(err)
+	}
 }
